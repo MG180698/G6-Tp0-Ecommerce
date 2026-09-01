@@ -1,0 +1,4 @@
+Endpoints REST (@RestController). Solo HTTP: rutas, codigos de estado y
+conversion a JSON. No accede al repository ni contiene reglas de negocio.
+
+Cada modulo agrega su propio controller aca.
