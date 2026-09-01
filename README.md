@@ -1,1 +1,165 @@
 # G6-Tp0-Ecommerce
+
+API REST de un sistema de e-commerce, desarrollada como Trabajo Practico
+Obligatorio de Aplicaciones Interactivas (UADE, 2do cuatrimestre 2026).
+El backend resuelve el registro y login de usuarios, el catalogo de productos
+organizado por categorias, la gestion de publicaciones con sus fotos y su stock,
+el carrito de compras y el checkout. El checkout calcula el total, valida el
+stock disponible y lo descuenta dentro de una unica transaccion. Esta construido
+con Java 17, Spring Boot, Spring Data JPA y Maven.
+
+---
+
+> **Estado: kickoff.** Este repo tiene el esqueleto y las 6 entidades JPA.
+> Los controllers, services y repositories los agrega cada modulo. Ver
+> [Reparto de modulos](#reparto-de-modulos).
+
+## Como levantar el proyecto
+
+Solo hace falta **JDK 17**. La base por defecto es H2 en memoria, asi que no hay
+que instalar ninguna base de datos.
+
+```bash
+./mvnw spring-boot:run
+```
+
+En Windows, desde PowerShell:
+
+```bash
+.\mvnw spring-boot:run
+```
+
+La API queda en `http://localhost:8080`. Todavia no hay endpoints: por ahora lo
+unico que se puede verificar es que arranca y que crea las tablas.
+
+### Verificar que las tablas se crearon (consola de H2)
+
+Abrir `http://localhost:8080/h2-console`:
+
+| Campo | Valor |
+|---|---|
+| JDBC URL | `jdbc:h2:mem:ecommercedb` |
+| User | `sa` |
+| Password | *(vacio)* |
+
+> El formulario viene con `jdbc:h2:mem:testdb` precargado. **Hay que cambiarlo**
+> por `jdbc:h2:mem:ecommercedb` o Connect falla, y el error aparece chiquito
+> debajo del formulario.
+
+Deberian verse 6 tablas: `usuarios`, `categorias`, `productos`,
+`imagenes_producto`, `carritos`, `items_carrito`.
+
+### Correr contra MySQL (opcional)
+
+Con un MySQL escuchando en `localhost:3306`:
+
+```bash
+.\mvnw spring-boot:run "-Dspring-boot.run.profiles=mysql"
+```
+
+La forma mas simple de tener ese MySQL es el contenedor de la clase 03. Se
+ejecuta **una sola vez**:
+
+```bash
+docker run --name mysql-uade -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3306:3306 -d mysql:8.0
+```
+
+De ahi en mas, cada dia alcanza con `docker start mysql-uade` (y
+`docker stop mysql-uade` al terminar). A diferencia de H2, los datos sobreviven
+al reinicio de la aplicacion.
+
+La base se llama **`ecommerce_tpo`** y la crea sola el driver. Usa un nombre
+propio a proposito: si el contenedor ya tiene una base de otra practica de la
+materia, Hibernate encontraria tablas con un esquema distinto y las mezclaria
+con las nuestras en vez de reemplazarlas.
+
+## Estructura
+
+```
+com.uade.TPO_Ecommerce_Grupo6
+├── controller/     Endpoints REST (@RestController). Solo HTTP.
+├── service/        Logica de negocio y transacciones (@Service, @Transactional).
+├── repository/     Acceso a datos (@Repository, extienden JpaRepository).
+├── model/
+│   ├── entity/     Las 6 entidades JPA. YA ESTAN, no crear nuevas.
+│   └── dto/        Objetos de entrada y salida de la API.
+├── exception/      Excepciones propias + manejador global.
+├── config/         CORS, BCrypt, Swagger.
+└── EcommerceApplication.java
+```
+
+Regla de la catedra: el Controller nunca accede al Repository ni contiene
+reglas de negocio, y no maneja transacciones. Eso vive en el Service. Las
+entidades nunca salen de la API: siempre se convierten a DTO (asi la password
+no puede filtrarse en ninguna respuesta).
+
+## Modelo de datos
+
+Las 6 entidades ya estan creadas y anotadas. **No hay que crear entidades
+nuevas ni renombrar las que estan** — si a alguien le falta un campo, se avisa
+al grupo antes de tocarlas, porque las comparten varios modulos.
+
+| Relacion | Donde |
+|---|---|
+| `@ManyToOne` | Producto → Categoria, Producto → Usuario, ItemCarrito → Producto, ImagenProducto → Producto |
+| `@OneToMany` | Categoria → productos, Producto → imagenes, Carrito → items |
+| `@OneToOne` | Carrito → Usuario |
+
+Decisiones que conviene poder defender en la entrega:
+
+- **`precio` es `BigDecimal`, no `double`**: `double` arrastra errores de
+  redondeo binario y con plata eso no se perdona.
+- **`ItemCarrito` es una entidad y no un `@ManyToMany`**: la asociacion entre
+  carrito y producto tiene un atributo propio, la cantidad. Ese es el patron
+  estandar de JPA para ese caso.
+- **`ImagenProducto` es una entidad y no una lista de Strings**: la catedra pide
+  demostrar relaciones JPA explicitas entre entidades reales.
+- **Un solo `Usuario`, sin roles**: el enunciado no distingue comprador de
+  vendedor, el mismo usuario compra y publica.
+
+## Reparto de modulos
+
+Cada modulo es una vertical completa: su repository, su service, su controller y
+sus DTOs. Las entidades ya estan y son compartidas.
+
+| # | Modulo | Endpoints | Depende de |
+|---|---|---|---|
+| 1 | Usuarios | `POST /api/usuarios` | kickoff |
+| 2 | Autenticacion + errores globales | `POST /api/auth/login` | 1 |
+| 3 | Categorias (CRUD) | `GET/POST/PUT/DELETE /api/categorias` | kickoff |
+| 4 | Catalogo (listado y detalle) | `GET /api/productos`, `GET /api/productos/{id}` | 1, 3 |
+| 5 | Gestion de productos | `POST/PUT/DELETE /api/productos` | 1, 3, 4 |
+| 6 | Imagenes de producto | `POST /api/productos/{id}/imagenes` | 5 |
+| 7 | Carrito (items) | `GET/POST/DELETE /api/carrito` | 1, 4 |
+| 8 | Checkout + documentacion | `POST /api/carrito/checkout` | 7 |
+
+## Como trabajamos
+
+- `main` **siempre tiene que compilar y levantar**. Antes de pushear:
+  `.\mvnw test`.
+- Cada uno trabaja en su rama: `feature/<numero-modulo>-<nombre-corto>`
+  (ej. `feature/5-gestion-producto`).
+- Al terminar, Pull Request a `main` y **otro integrante lo revisa** antes de
+  mergear. Mergear seguido, no todos los PRs juntos al final.
+- Commits chicos y continuos, estilo conventional commits. La catedra evalua
+  cantidad, calidad y continuidad de los commits **de cada uno**:
+
+```
+feat(producto): agrego el ProductoRepository con busqueda por categoria
+fix(carrito): valida stock antes de descontar en el checkout
+docs(readme): agrego instrucciones de levantado
+```
+
+Tipos: `feat`, `fix`, `refactor`, `test`, `docs`.
+
+## Decisiones que faltan tomar en equipo
+
+1. **Autenticacion**: alcance minimo (el `AuthService` valida email + password
+   con BCrypt y el front guarda el `usuarioId`) o plus (Spring Security + JWT
+   protegiendo los endpoints). El kickoff no la cierra: el resto del diseño
+   funciona igual con cualquiera de las dos. Define el Modulo 2.
+2. **`Pedido` / `ItemPedido`**: el enunciado no pide historial de compras, solo
+   que el checkout calcule el total y descuente stock. Queda como candidato a
+   "funcionalidad extra" si sobra tiempo. Define el Modulo 8.
+3. **Fecha de entrega**: el material de la catedra tiene dos fechas distintas
+   para la misma entrega. Confirmar en el campus antes de armar el cronograma.
