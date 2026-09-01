@@ -1,0 +1,4 @@
+Logica de negocio y transacciones (@Service, @Transactional).
+Validaciones, calculos y todo lo que sea "regla" del sistema vive aca.
+
+Cada modulo agrega su propio service aca.

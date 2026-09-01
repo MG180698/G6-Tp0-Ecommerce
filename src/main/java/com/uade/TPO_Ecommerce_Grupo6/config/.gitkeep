@@ -1,0 +1,4 @@
+Beans de configuracion: CORS, BCrypt, Swagger/OpenAPI.
+
+CORS y BCrypt los necesitan los Modulos 1 y 2.
+Swagger lo agrega el Modulo 8.

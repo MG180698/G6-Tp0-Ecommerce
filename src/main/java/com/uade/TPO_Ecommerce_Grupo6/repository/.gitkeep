@@ -1,0 +1,4 @@
+Acceso a datos (@Repository). Interfaces que extienden JpaRepository:
+Spring Data genera la implementacion sola, no hay que escribir SQL.
+
+Cada modulo agrega su propio repository aca.
