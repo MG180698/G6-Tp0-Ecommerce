@@ -1,0 +1,4 @@
+Excepciones propias del dominio y el manejador global
+(@RestControllerAdvice) que las traduce a codigos HTTP.
+
+Lo arma el Modulo 2 (Autenticacion + manejo global de errores).
