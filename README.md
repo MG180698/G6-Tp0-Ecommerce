@@ -29,8 +29,8 @@ En Windows, desde PowerShell:
 .\mvnw spring-boot:run
 ```
 
-La API queda en `http://localhost:8080`. Todavia no hay endpoints: por ahora lo
-unico que se puede verificar es que arranca y que crea las tablas.
+La API queda en `http://localhost:8080`. Los endpoints los va agregando cada
+modulo; el kickoff solo garantiza que la app arranca y crea las tablas.
 
 ### Verificar que las tablas se crearon (consola de H2)
 
@@ -84,8 +84,8 @@ com.uade.TPO_Ecommerce_Grupo6
 │   ├── entity/     Las 6 entidades JPA. YA ESTAN, no crear nuevas.
 │   └── dto/        Objetos de entrada y salida de la API.
 ├── exception/      Excepciones propias + manejador global.
-├── config/         CORS, BCrypt, Swagger.
-└── EcommerceApplication.java
+├── config/         Seguridad, CORS, Swagger.
+└── TpoEcommerceGrupo6Application.java
 ```
 
 Regla de la catedra: el Controller nunca accede al Repository ni contiene
@@ -152,14 +152,40 @@ docs(readme): agrego instrucciones de levantado
 
 Tipos: `feat`, `fix`, `refactor`, `test`, `docs`.
 
+## Seguridad
+
+La autenticacion va con **Spring Security + JWT**, que es lo que baja la Clase 05.
+Las dependencias ya estan en el `pom.xml` (`spring-boot-starter-security`,
+`spring-security-test` y las tres de `jjwt` 0.11.5).
+
+`config/SecurityConfig.java` es **provisional**: hoy abre todos los endpoints
+(`permitAll`). Existe porque el solo hecho de agregar
+`spring-boot-starter-security` hace que Spring Boot pida login en todo y deje en
+401 los endpoints que ya funcionaban. Deja armado lo que hace falta: el bean de
+BCrypt, el modo stateless y el permiso de frames para la consola de H2.
+
+**El Modulo 2 reemplaza el `permitAll` por las reglas reales** y engancha el
+filtro de JWT. Hasta que eso pase, nadie queda bloqueado.
+
+> Ojo con la version de `jjwt`: la Clase 05 fija la **0.11.5**, y la API cambio
+> bastante en la 0.12.x. Un tutorial de 0.12 no compila contra esta.
+
+## Entrega
+
+**Martes 8 de septiembre de 2026, 23:59.** El material de la catedra traia dos
+fechas distintas para la misma entrega; esta es la confirmada.
+
+Checklist:
+
+- [ ] `.zip` con el codigo fuente subido a la actividad de BSP
+- [ ] Link a este repositorio incluido en la entrega
+- [ ] Los 3 puntos de la consigna: la app cumple los requerimientos, tiene capa
+      de persistencia, y expone una API REST
+- [ ] Arquitectura en capas completa (Controller / Service `@Transactional` /
+      Repository / Entity / DTO)
+
 ## Decisiones que faltan tomar en equipo
 
-1. **Autenticacion**: alcance minimo (el `AuthService` valida email + password
-   con BCrypt y el front guarda el `usuarioId`) o plus (Spring Security + JWT
-   protegiendo los endpoints). El kickoff no la cierra: el resto del diseño
-   funciona igual con cualquiera de las dos. Define el Modulo 2.
-2. **`Pedido` / `ItemPedido`**: el enunciado no pide historial de compras, solo
+1. **`Pedido` / `ItemPedido`**: el enunciado no pide historial de compras, solo
    que el checkout calcule el total y descuente stock. Queda como candidato a
    "funcionalidad extra" si sobra tiempo. Define el Modulo 8.
-3. **Fecha de entrega**: el material de la catedra tiene dos fechas distintas
-   para la misma entrega. Confirmar en el campus antes de armar el cronograma.
