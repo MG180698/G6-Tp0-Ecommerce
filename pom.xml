@@ -26,6 +26,10 @@
 
 	<properties>
 		<java.version>17</java.version>
+		<!-- Version de jjwt fijada por el paso a paso de la Clase 05.
+		     Ojo: la API cambio bastante en 0.12.x, asi que los tutoriales de
+		     esa version no compilan contra esta. -->
+		<jjwt.version>0.11.5</jjwt.version>
 	</properties>
 
 	<dependencies>
@@ -76,17 +80,42 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- Solo el BCrypt de Spring Security, para hashear contrasenias.
-		     No arrastra los filtros de seguridad: no protege endpoints. -->
+		<!-- Spring Security: autenticacion, autorizacion y BCrypt.
+		     Reemplaza a spring-security-crypto, que solo traia el hasheo.
+		     La Clase 05 define este como el camino de autenticacion del TPO. -->
 		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-crypto</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- Tokens JWT para el login (Clase 05) -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
