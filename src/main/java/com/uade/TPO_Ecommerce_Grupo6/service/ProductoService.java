@@ -76,6 +76,38 @@ public class ProductoService {
         return convertirADetalle(productoGuardado, List.of());
     }
 
+    public ProductoDetalleResponse actualizar(Long id, ProductoRequest request) {
+
+        Producto producto = buscarEntidadPorId(id);
+
+        Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "No existe el usuario con ID " + request.getUsuarioId()));
+
+        if (!producto.getUsuario().getId().equals(usuario.getId())) {
+            throw new IllegalArgumentException(
+                    "El usuario no puede modificar un producto que no le pertenece");
+        }
+
+        Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
+                .orElseThrow(() ->
+                        new CategoriaNoEncontradaException(request.getCategoriaId()));
+
+        producto.setNombre(request.getNombre());
+        producto.setDescripcion(request.getDescripcion());
+        producto.setPrecio(request.getPrecio());
+        producto.setStock(request.getStock());
+        producto.setCategoria(categoria);
+
+        Producto productoActualizado = productoRepository.save(producto);
+
+        List<ImagenProducto> imagenes =
+                imagenProductoRepository.findByProductoIdOrderByOrdenAsc(id);
+
+        return convertirADetalle(productoActualizado, imagenes);
+    }
+
     @Transactional(readOnly = true)
     public List<ProductoResumenResponse> listarTodos(Long categoriaId) {
 
