@@ -108,6 +108,23 @@ public class ProductoService {
         return convertirADetalle(productoActualizado, imagenes);
     }
 
+    public void eliminar(Long id, Long usuarioId) {
+
+        Producto producto = buscarEntidadPorId(id);
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "No existe el usuario con ID " + usuarioId));
+
+        if (!producto.getUsuario().getId().equals(usuario.getId())) {
+            throw new IllegalArgumentException(
+                    "El usuario no puede eliminar un producto que no le pertenece");
+        }
+
+        productoRepository.delete(producto);
+    }
+
     @Transactional(readOnly = true)
     public List<ProductoResumenResponse> listarTodos(Long categoriaId) {
 
@@ -125,8 +142,6 @@ public class ProductoService {
 
         Producto producto = buscarEntidadPorId(id);
 
-        // Reutiliza el método que dejó el Módulo 6 en vez de escribir uno propio:
-        // ya trae las imágenes ordenadas por "orden" resuelto en la base.
         List<ImagenProducto> imagenes =
                 imagenProductoRepository.findByProductoIdOrderByOrdenAsc(id);
 
@@ -141,11 +156,6 @@ public class ProductoService {
 
     private ProductoResumenResponse convertirAResumen(Producto producto) {
 
-        // Acá sí se usa la colección LAZY de la entidad (no el repository de
-        // imágenes): pedirle al repository la imagen principal producto por
-        // producto dentro de este map() generaría una consulta extra por cada
-        // fila del listado (N+1). Para un solo producto (el detalle, arriba)
-        // esa consulta extra no pesa; para una lista de N productos sí.
         String imagenPrincipalUrl = producto.getImagenes().stream()
                 .min(Comparator.comparing(
                         ImagenProducto::getOrden,
