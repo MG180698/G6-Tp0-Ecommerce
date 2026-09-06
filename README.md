@@ -99,11 +99,25 @@ Las 6 entidades ya estan creadas y anotadas. **No hay que crear entidades
 nuevas ni renombrar las que estan** — si a alguien le falta un campo, se avisa
 al grupo antes de tocarlas, porque las comparten varios modulos.
 
+### Diagrama entidad-relacion
+
+![Diagrama entidad-relacion del e-commerce](docs/der.png)
+
+Hecho en Lucidchart, importando el DDL que genera Hibernate a partir de las
+clases `@Entity`. El diagrama sale del esquema real, no de un dibujo hecho a
+mano, asi que no puede quedar desincronizado del codigo por descuido.
+
+Para regenerarlo si cambia el modelo: volver a exportar el DDL, reimportarlo en
+Lucidchart y exportar el PNG de nuevo.
+
+Las cuatro relaciones JPA que pide la catedra, y donde esta cada una:
+
 | Relacion | Donde |
 |---|---|
-| `@ManyToOne` | Producto → Categoria, Producto → Usuario, ItemCarrito → Producto, ImagenProducto → Producto |
+| `@ManyToOne` | Producto → Categoria, Producto → Usuario, ItemCarrito → Carrito, ItemCarrito → Producto, ImagenProducto → Producto |
 | `@OneToMany` | Categoria → productos, Producto → imagenes, Carrito → items |
 | `@OneToOne` | Carrito → Usuario |
+| `@ManyToMany` | Ninguna directa. La de Carrito ↔ Producto esta **resuelta** con `ItemCarrito`, porque la asociacion necesita guardar la cantidad. |
 
 Decisiones que conviene poder defender en la entrega:
 
