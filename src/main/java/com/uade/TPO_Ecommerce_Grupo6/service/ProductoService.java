@@ -125,6 +125,16 @@ public class ProductoService {
         productoRepository.delete(producto);
     }
 
+    /**
+     * Descuenta el stock de un producto vendido durante el checkout.
+     * Reutilizado por el Módulo 8 (Checkout) dentro de la misma transacción.
+     */
+    public void descontarStock(Long productoId, Integer cantidad) {
+        Producto producto = buscarEntidadPorId(productoId);
+        producto.setStock(producto.getStock() - cantidad);
+        productoRepository.save(producto);
+    }
+
     @Transactional(readOnly = true)
     public List<ProductoResumenResponse> listarTodos(Long categoriaId) {
 

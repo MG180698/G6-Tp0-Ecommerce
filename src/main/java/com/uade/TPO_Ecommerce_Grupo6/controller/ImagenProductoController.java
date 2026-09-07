@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.imagen.ImagenProductoRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.imagen.ImagenProductoResponse;
 import com.uade.TPO_Ecommerce_Grupo6.service.ImagenProductoService;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+@Tag(name = "Imágenes de Producto", description = "Endpoints para la gestión de imágenes de publicaciones")
 @RestController
 @RequestMapping("/api/productos")
 public class ImagenProductoController {
@@ -25,6 +27,7 @@ public class ImagenProductoController {
     }
 
     // POST /api/productos/{id}/imagenes -> agrega una foto a un producto existente
+    @Operation(summary = "Agregar una foto a una publicación de producto existente")
     @PostMapping("/{id}/imagenes")
     public ResponseEntity<ImagenProductoResponse> agregarImagen(
             @PathVariable("id") Long productoId,
