@@ -5,6 +5,7 @@ import com.uade.TPO_Ecommerce_Grupo6.model.dto.ItemCarrito.ActualizarItemCarrito
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.ItemCarrito.AgregarItemCarritoRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.ItemCarrito.ItemCarritoDTO;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.carrito.CarritoDTO;
+import com.uade.TPO_Ecommerce_Grupo6.model.dto.carrito.CheckoutResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.carrito.CrearCarritoRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Carrito;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.ItemCarrito;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -27,13 +29,16 @@ public class CarritoService {
     private final ItemCarritoRepository itemCarritoRepository;
     private final ProductoRepository productoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ProductoService productoService;
 
     public CarritoService(CarritoRepository carritoRepository, ItemCarritoRepository itemCarritoRepository,
-                          ProductoRepository productoRepository, UsuarioRepository usuarioRepository) {
+                          ProductoRepository productoRepository, UsuarioRepository usuarioRepository,
+                          ProductoService productoService) {
         this.carritoRepository = carritoRepository;
         this.itemCarritoRepository = itemCarritoRepository;
         this.productoRepository = productoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.productoService = productoService;
     }
 
     @Transactional
@@ -112,6 +117,47 @@ public class CarritoService {
         Carrito carrito = buscarCarrito(usuarioId);
         carrito.vaciar();
         carritoRepository.save(carrito);
+    }
+
+    @Transactional
+    public CheckoutResponse checkout(Long usuarioId) {
+        Carrito carrito = buscarCarrito(usuarioId);
+
+        if (carrito.getItems() == null || carrito.getItems().isEmpty()) {
+            throw new IllegalStateException("No se puede realizar el checkout porque el carrito está vacío");
+        }
+
+        // 1. Reutilización de código: validar stock disponible para todos los ítems antes de proceder
+        for (ItemCarrito item : carrito.getItems()) {
+            validarStock(item.getProducto(), item.getCantidad());
+        }
+
+        // 2. Calcular monto total (precio * cantidad) y cantidad total de items
+        BigDecimal montoTotal = BigDecimal.ZERO;
+        int totalItemsComprados = 0;
+
+        for (ItemCarrito item : carrito.getItems()) {
+            BigDecimal subtotal = item.getProducto().getPrecio().multiply(BigDecimal.valueOf(item.getCantidad()));
+            montoTotal = montoTotal.add(subtotal);
+            totalItemsComprados += item.getCantidad();
+        }
+
+        // 3. Descontar stock delegando en ProductoService dentro de la misma transacción
+        for (ItemCarrito item : carrito.getItems()) {
+            productoService.descontarStock(item.getProducto().getId(), item.getCantidad());
+        }
+
+        // 4. Vaciar el carrito tras checkout exitoso
+        carrito.vaciar();
+        carritoRepository.save(carrito);
+
+        return CheckoutResponse.builder()
+                .usuarioId(usuarioId)
+                .cantidadItemsComprados(totalItemsComprados)
+                .montoTotal(montoTotal)
+                .fechaCheckout(LocalDateTime.now())
+                .mensaje("Checkout realizado con éxito")
+                .build();
     }
 
     private Carrito buscarCarrito(Long usuarioId) {
