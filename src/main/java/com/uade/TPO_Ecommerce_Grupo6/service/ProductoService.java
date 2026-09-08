@@ -11,7 +11,7 @@ import com.uade.TPO_Ecommerce_Grupo6.exception.AccesoNoAutorizadoException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.CategoriaNoEncontradaException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.ProductoNoEncontradoException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.UsuarioNoEncontradoException;
-import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ImagenProductoResponse;
+import com.uade.TPO_Ecommerce_Grupo6.model.dto.imagen.ImagenProductoResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoDetalleResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoResumenResponse;
@@ -208,7 +208,8 @@ public class ProductoService {
                 .map(imagen -> new ImagenProductoResponse(
                         imagen.getId(),
                         imagen.getUrl(),
-                        imagen.getOrden()))
+                        imagen.getOrden(),
+                        imagen.getProducto().getId()))
                 .toList();
 
         String vendedorNombre =

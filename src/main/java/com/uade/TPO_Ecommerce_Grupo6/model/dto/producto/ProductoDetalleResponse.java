@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import com.uade.TPO_Ecommerce_Grupo6.model.dto.imagen.ImagenProductoResponse;
 
 /**
  * Detalle de un producto (GET /api/productos/{id}): "imagen ampliada +

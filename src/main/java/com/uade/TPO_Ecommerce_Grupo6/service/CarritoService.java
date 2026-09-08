@@ -64,7 +64,16 @@ public class CarritoService {
 
     @Transactional
     public CarritoDTO agregarItem(AgregarItemCarritoRequest request) {
-        Carrito carrito = buscarCarrito(request.getUsuarioId());
+        // Si el carrito no existe, crearlo automaticamente
+        Carrito carrito = carritoRepository.findByUsuario_Id(request.getUsuarioId())
+                .orElseGet(() -> {
+                    Usuario usuario = usuarioRepository
+                            .findById(request.getUsuarioId())
+                            .orElseThrow(() -> new UsuarioNoEncontradoException(request.getUsuarioId()));
+                    Carrito nuevoCarrito = Carrito.builder().usuario(usuario).build();
+                    return carritoRepository.save(nuevoCarrito);
+                });
+
         Producto producto = productoRepository
                 .findById(request.getProductoId())
                 .orElseThrow(() -> new ProductoNoEncontradoException(request.getProductoId()));
