@@ -2,15 +2,17 @@
 
 API REST de un sistema de e-commerce, desarrollada como Trabajo Practico
 Obligatorio de Aplicaciones Interactivas (UADE, 2do cuatrimestre 2026).
-El backend resuelve el registro y login de usuarios, el catalogo de productos
-organizado por categorias, la gestion de publicaciones con sus fotos y su stock,
-el carrito de compras y el checkout. El checkout calcula el total, valida el
-stock disponible y lo descuenta dentro de una unica transaccion. Esta construido
-con Java 17, Spring Boot, Spring Data JPA y Maven.
+Resuelve el registro y login de usuarios con roles de cliente y vendedor, el
+catalogo de productos organizado por categorias, la gestion de publicaciones con
+sus fotos y su stock, el carrito de compras y el checkout, que calcula el total,
+valida el stock disponible y lo descuenta dentro de una unica transaccion.
+Construido con Java 17, Spring Boot, Spring Data JPA y Maven.
 
 ---
 
-> **Estado: Módulo 8 (Checkout, Documentación Swagger/OpenAPI e Integración) completado.**
+> **Estado: los 9 modulos estan implementados y mergeados en `main`.**
+> El flujo completo del enunciado corre de punta a punta: registro, login,
+> catalogo, publicacion de productos con fotos, carrito y checkout.
 > Ver [Reparto de modulos](#reparto-de-modulos).
 
 ## Documentación interactiva de la API (Swagger / OpenAPI)
@@ -117,6 +119,10 @@ mano, asi que no puede quedar desincronizado del codigo por descuido.
 Para regenerarlo si cambia el modelo: volver a exportar el DDL, reimportarlo en
 Lucidchart y exportar el PNG de nuevo.
 
+> **Pendiente:** la imagen es anterior a la separacion de roles, asi que le falta
+> la columna `rol` en `usuarios` (`VARCHAR(20) NOT NULL`). El resto del esquema
+> no cambio. Hay que regenerarla.
+
 Las cuatro relaciones JPA que pide la catedra, y donde esta cada una:
 
 | Relacion | Donde |
@@ -135,24 +141,28 @@ Decisiones que conviene poder defender en la entrega:
   estandar de JPA para ese caso.
 - **`ImagenProducto` es una entidad y no una lista de Strings**: la catedra pide
   demostrar relaciones JPA explicitas entre entidades reales.
-- **Un solo `Usuario`, sin roles**: el enunciado no distingue comprador de
-  vendedor, el mismo usuario compra y publica.
+- **`Usuario` tiene un rol, `CLIENTE` o `VENDEDOR`**: el profesor aclaro que un
+  e-commerce tiene un vendedor fijo (el dueño del sitio, como la pagina de una
+  marca), a diferencia de un marketplace donde cualquiera publica. Por eso solo
+  el rol `VENDEDOR` puede dar de alta, modificar o eliminar productos. Se
+  corresponde con los roles USER y ADMIN del material de la Clase 05.
 
 ## Reparto de modulos
 
 Cada modulo es una vertical completa: su repository, su service, su controller y
 sus DTOs. Las entidades ya estan y son compartidas.
 
-| # | Modulo | Endpoints | Depende de | Estado |
-|---|---|---|---|---|
-| 1 | Usuarios | `POST /api/usuarios` | kickoff | Pendiente |
-| 2 | Autenticacion + errores globales | `POST /api/auth/login` | 1 | Pendiente |
-| 3 | Categorias (CRUD) | `GET/POST/PUT/DELETE /api/categorias` | kickoff | Implementado |
-| 4 | Catalogo (listado y detalle) | `GET /api/productos`, `GET /api/productos/{id}` | 1, 3 | Implementado |
-| 5 | Gestion de productos | `POST/PUT/DELETE /api/productos` | 1, 3, 4 | Implementado |
-| 6 | Imagenes de producto | `POST /api/productos/{id}/imagenes` | 5 | Implementado |
-| 7 | Carrito (items) | `GET/POST/DELETE /api/carrito` | 1, 4 | Implementado |
-| 8 | Checkout + documentacion | `POST /api/carrito/checkout` | 7 | **Implementado** |
+| # | Modulo | Endpoints | Estado |
+|---|---|---|---|
+| 0 | Kickoff: esqueleto, entidades y configuracion | - | Implementado |
+| 1 | Usuarios | `POST /api/usuarios`, `GET /api/usuarios/{id}` | Implementado |
+| 2 | Autenticacion + errores globales | `POST /api/auth/login` | Implementado |
+| 3 | Categorias (CRUD) | `GET/POST/PUT/DELETE /api/categorias` | Implementado |
+| 4 | Catalogo (listado y detalle) | `GET /api/productos`, `GET /api/productos/{id}` | Implementado |
+| 5 | Gestion de productos | `POST/PUT/DELETE /api/productos` | Implementado |
+| 6 | Imagenes de producto | `POST /api/productos/{id}/imagenes` | Implementado |
+| 7 | Carrito (items) | `GET/POST/PUT/DELETE /api/carrito` | Implementado |
+| 8 | Checkout + documentacion | `POST /api/carrito/checkout` | Implementado |
 
 ## Como trabajamos
 
@@ -175,18 +185,47 @@ Tipos: `feat`, `fix`, `refactor`, `test`, `docs`.
 
 ## Seguridad
 
-La autenticacion va con **Spring Security + JWT**, que es lo que baja la Clase 05.
-Las dependencias ya estan en el `pom.xml` (`spring-boot-starter-security`,
-`spring-security-test` y las tres de `jjwt` 0.11.5).
+### Contrasenias
 
-`config/SecurityConfig.java` es **provisional**: hoy abre todos los endpoints
-(`permitAll`). Existe porque el solo hecho de agregar
-`spring-boot-starter-security` hace que Spring Boot pida login en todo y deje en
-401 los endpoints que ya funcionaban. Deja armado lo que hace falta: el bean de
-BCrypt, el modo stateless y el permiso de frames para la consola de H2.
+Se guardan hasheadas con **BCrypt**, nunca en texto plano. `UsuarioResponse` no
+tiene el campo password, ni siquiera hasheado: ese es el motivo concreto por el
+que la consigna pide DTOs en vez de devolver la entidad.
 
-**El Modulo 2 reemplaza el `permitAll` por las reglas reales** y engancha el
-filtro de JWT. Hasta que eso pase, nadie queda bloqueado.
+El login (`POST /api/auth/login`) busca al usuario por email y compara la
+contrasenia con `passwordEncoder.matches()`. No se puede resolver con una
+consulta `WHERE email = ? AND password = ?` porque BCrypt usa salt: cada vez que
+se hashea la misma contrasenia sale un hash distinto.
+
+Si las credenciales son incorrectas responde **401**, con el mismo mensaje tanto
+si el email no existe como si la contrasenia esta mal. Es deliberado: si
+distinguiera los dos casos, cualquiera podria averiguar que direcciones estan
+registradas probando de a una.
+
+### Roles
+
+`Usuario` tiene un rol, `CLIENTE` o `VENDEDOR`. Solo el `VENDEDOR` puede
+publicar, modificar o eliminar productos; el `CLIENTE` navega, arma el carrito y
+compra. Quien intenta una operacion que su rol no permite recibe **403**.
+
+El registro crea un `CLIENTE` salvo que se pida otro rol explicitamente:
+
+```json
+POST /api/usuarios
+{ "username": "tienda", "email": "tienda@sitio.com", "password": "secreto123",
+  "nombre": "Mi", "apellido": "Tienda", "rol": "VENDEDOR" }
+```
+
+### Que falta para cerrar la seguridad
+
+Las dependencias de `jjwt` estan en el `pom.xml`, pero **el login todavia no
+emite un token JWT**: devuelve los datos del usuario. Mientras eso no exista, el
+`usuarioId` viaja en el cuerpo de cada request, asi que las validaciones de rol
+y de dueño se apoyan en un dato que manda el cliente. Es la mejora numero uno
+para una proxima entrega: cuando el usuario salga del token, el campo
+`usuarioId` desaparece de `ProductoRequest` y de los parametros del carrito.
+
+`config/SecurityConfig.java` abre todos los endpoints (`permitAll`) por el mismo
+motivo: sin token que validar, cerrarlos dejaria la API inutilizable.
 
 > Ojo con la version de `jjwt`: la Clase 05 fija la **0.11.5**, y la API cambio
 > bastante en la 0.12.x. Un tutorial de 0.12 no compila contra esta.
@@ -196,14 +235,20 @@ filtro de JWT. Hasta que eso pase, nadie queda bloqueado.
 **Martes 8 de septiembre de 2026, 23:59.** El material de la catedra traia dos
 fechas distintas para la misma entrega; esta es la confirmada.
 
-Checklist:
+Checklist de la consigna:
 
-- [ ] `.zip` con el codigo fuente subido a la actividad de BSP
-- [ ] Link a este repositorio incluido en la entrega
-- [ ] Los 3 puntos de la consigna: la app cumple los requerimientos, tiene capa
-      de persistencia, y expone una API REST
-- [ ] Arquitectura en capas completa (Controller / Service `@Transactional` /
-      Repository / Entity / DTO)
+- [ ] Archivo `.zip` con el codigo fuente subido a la actividad de BSP
+- [ ] Link al repositorio de GitHub del equipo incluido en la entrega
+- [ ] **Nombre del repositorio: `back-nombreProyecto`** (ej. `back-ecommerce`).
+      Hoy el repo se llama `G6-Tp0-Ecommerce`, que **no respeta ese formato**.
+      Renombrarlo en GitHub es un click, en Settings, y no rompe los clones
+      existentes porque GitHub deja una redireccion.
+- [x] `README.md` con descripcion y alcance en **maximo 7 lineas** (las de
+      arriba son exactamente 7) y debajo el detalle tecnico y funcional
+- [x] Los 3 puntos de la consigna funcional: la app cumple los requerimientos,
+      tiene capa de persistencia agregada y expone una API REST construida
+- [x] Arquitectura en capas completa (Controller / Service `@Transactional` /
+      Repository `@Repository` / Entity / DTO)
 
 ## Decisiones que faltan tomar en equipo
 
