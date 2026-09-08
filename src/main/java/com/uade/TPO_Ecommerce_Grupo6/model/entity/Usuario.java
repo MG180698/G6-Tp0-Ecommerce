@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -52,4 +54,11 @@ public class Usuario {
 
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro;
+
+    // EnumType.STRING guarda "CLIENTE" o "VENDEDOR" en la columna, no el
+    // numero de posicion del enum: si mañana se agrega un rol en el medio, los
+    // datos existentes no cambian de significado.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private RolUsuario rol;
 }
