@@ -1,5 +1,7 @@
 package com.uade.TPO_Ecommerce_Grupo6.model.dto.usuario;
 
+import com.uade.TPO_Ecommerce_Grupo6.model.entity.RolUsuario;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -39,4 +41,8 @@ public class UsuarioRequest {
     @NotBlank(message = "El apellido es obligatorio")
     @Size(max = 50, message = "El apellido no puede superar los 50 caracteres")
     private String apellido;
+
+    // Opcional. Si no viene, el usuario se registra como CLIENTE: es el caso
+    // normal. El VENDEDOR del sitio se da de alta una sola vez.
+    private RolUsuario rol;
 }
