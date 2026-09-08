@@ -4,7 +4,6 @@ import com.uade.TPO_Ecommerce_Grupo6.model.dto.ItemCarrito.ActualizarItemCarrito
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.ItemCarrito.AgregarItemCarritoRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.carrito.CarritoDTO;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.carrito.CheckoutResponse;
-import com.uade.TPO_Ecommerce_Grupo6.model.dto.carrito.CrearCarritoRequest;
 import com.uade.TPO_Ecommerce_Grupo6.service.CarritoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,14 +29,7 @@ public class CarritoController {
         return ResponseEntity.ok(carritoService.obtenerCarrito(usuarioId));
     }
 
-    @Operation(summary = "Crear un carrito para un usuario")
-    @PostMapping
-    public ResponseEntity<CarritoDTO> crearCarrito(@Valid @RequestBody CrearCarritoRequest request) {
-        CarritoDTO carrito = carritoService.crearCarrito(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(carrito);
-    }
-
-    @Operation(summary = "Agregar un producto al carrito")
+    @Operation(summary = "Agregar un producto al carrito (crea el carrito automáticamente si no existe)")
     @PostMapping("/items")
     public ResponseEntity<CarritoDTO> agregarItem(@Valid @RequestBody AgregarItemCarritoRequest request) {
         return ResponseEntity.ok(carritoService.agregarItem(request));
