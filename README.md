@@ -10,19 +10,16 @@ Construido con Java 17, Spring Boot, Spring Data JPA y Maven.
 
 ---
 
+## Detalle tecnico y funcional
+
 > **Estado: los 9 modulos estan implementados y mergeados en `main`.**
 > El flujo completo del enunciado corre de punta a punta: registro, login,
 > catalogo, publicacion de productos con fotos, carrito y checkout.
 > Ver [Reparto de modulos](#reparto-de-modulos).
 
-## Documentación interactiva de la API (Swagger / OpenAPI)
-
-Una vez levantada la aplicación, la documentación interactiva con Swagger UI y la especificación OpenAPI están disponibles en:
-
-- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (o [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html))
-- **OpenAPI JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
-
-Desde Swagger UI se pueden explorar todos los endpoints y probar peticiones interactivamente (Catálogo, Productos, Imágenes, Categorías, Carrito y Checkout).
+El resto de este documento es el detalle tecnico y funcional: como levantar
+el proyecto, la documentacion interactiva de la API, la arquitectura en
+capas, el modelo de datos, la seguridad y el estado de cada modulo.
 
 ## Como levantar el proyecto
 
@@ -82,6 +79,15 @@ propio a proposito: si el contenedor ya tiene una base de otra practica de la
 materia, Hibernate encontraria tablas con un esquema distinto y las mezclaria
 con las nuestras en vez de reemplazarlas.
 
+## Documentación interactiva de la API (Swagger / OpenAPI)
+
+Una vez levantada la aplicación, la documentación interactiva con Swagger UI y la especificación OpenAPI están disponibles en:
+
+- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (o [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html))
+- **OpenAPI JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+Desde Swagger UI se pueden explorar todos los endpoints y probar peticiones interactivamente (Catálogo, Productos, Imágenes, Categorías, Carrito y Checkout).
+
 ## Estructura
 
 ```
@@ -113,10 +119,11 @@ al grupo antes de tocarlas, porque las comparten varios modulos.
 ![Diagrama entidad-relacion del e-commerce](docs/der.png)
 
 Hecho en Lucidchart, importando el DDL que genera Hibernate a partir de las
-clases `@Entity`. El diagrama sale del esquema real, no de un dibujo hecho a
-mano, asi que no puede quedar desincronizado del codigo por descuido.
+clases `@Entity`. Sale del esquema real y no de un dibujo hecho a mano, asi que
+las tablas, los tipos y las claves foraneas son exactamente los que crea la
+aplicacion.
 
-Para regenerarlo si cambia el modelo: volver a exportar el DDL, reimportarlo en
+Para regenerarlo cuando cambia el modelo: exportar el DDL, reimportarlo en
 Lucidchart y exportar el PNG de nuevo.
 
 > **Pendiente:** la imagen es anterior a la separacion de roles, asi que le falta
@@ -163,25 +170,6 @@ sus DTOs. Las entidades ya estan y son compartidas.
 | 6 | Imagenes de producto | `POST /api/productos/{id}/imagenes` | Implementado |
 | 7 | Carrito (items) | `GET/POST/PUT/DELETE /api/carrito` | Implementado |
 | 8 | Checkout + documentacion | `POST /api/carrito/checkout` | Implementado |
-
-## Como trabajamos
-
-- `main` **siempre tiene que compilar y levantar**. Antes de pushear:
-  `.\mvnw test`.
-- Cada uno trabaja en su rama: `feature/<numero-modulo>-<nombre-corto>`
-  (ej. `feature/5-gestion-producto`).
-- Al terminar, Pull Request a `main` y **otro integrante lo revisa** antes de
-  mergear. Mergear seguido, no todos los PRs juntos al final.
-- Commits chicos y continuos, estilo conventional commits. La catedra evalua
-  cantidad, calidad y continuidad de los commits **de cada uno**:
-
-```
-feat(producto): agrego el ProductoRepository con busqueda por categoria
-fix(carrito): valida stock antes de descontar en el checkout
-docs(readme): agrego instrucciones de levantado
-```
-
-Tipos: `feat`, `fix`, `refactor`, `test`, `docs`.
 
 ## Seguridad
 
@@ -230,6 +218,25 @@ motivo: sin token que validar, cerrarlos dejaria la API inutilizable.
 > Ojo con la version de `jjwt`: la Clase 05 fija la **0.11.5**, y la API cambio
 > bastante en la 0.12.x. Un tutorial de 0.12 no compila contra esta.
 
+## Como trabajamos
+
+- `main` **siempre tiene que compilar y levantar**. Antes de pushear:
+  `.\mvnw test`.
+- Cada uno trabaja en su rama: `feature/<numero-modulo>-<nombre-corto>`
+  (ej. `feature/5-gestion-producto`).
+- Al terminar, Pull Request a `main` y **otro integrante lo revisa** antes de
+  mergear. Mergear seguido, no todos los PRs juntos al final.
+- Commits chicos y continuos, estilo conventional commits. La catedra evalua
+  cantidad, calidad y continuidad de los commits **de cada uno**:
+
+```
+feat(producto): agrego el ProductoRepository con busqueda por categoria
+fix(carrito): valida stock antes de descontar en el checkout
+docs(readme): agrego instrucciones de levantado
+```
+
+Tipos: `feat`, `fix`, `refactor`, `test`, `docs`.
+
 ## Entrega
 
 **Martes 8 de septiembre de 2026, 23:59.** El material de la catedra traia dos
@@ -249,9 +256,3 @@ Checklist de la consigna:
       tiene capa de persistencia agregada y expone una API REST construida
 - [x] Arquitectura en capas completa (Controller / Service `@Transactional` /
       Repository `@Repository` / Entity / DTO)
-
-## Decisiones que faltan tomar en equipo
-
-1. **`Pedido` / `ItemPedido`**: el enunciado no pide historial de compras, solo
-   que el checkout calcule el total y descuente stock. Queda como candidato a
-   "funcionalidad extra" si sobra tiempo. Define el Modulo 8.
