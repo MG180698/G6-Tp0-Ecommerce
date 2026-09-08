@@ -7,8 +7,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.uade.TPO_Ecommerce_Grupo6.exception.AccesoNoAutorizadoException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.CategoriaNoEncontradaException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.ProductoNoEncontradoException;
+import com.uade.TPO_Ecommerce_Grupo6.exception.UsuarioNoEncontradoException;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ImagenProductoResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoDetalleResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoRequest;
@@ -16,6 +18,7 @@ import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoResumenResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Categoria;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.ImagenProducto;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Producto;
+import com.uade.TPO_Ecommerce_Grupo6.model.entity.RolUsuario;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Usuario;
 import com.uade.TPO_Ecommerce_Grupo6.repository.CategoriaRepository;
 import com.uade.TPO_Ecommerce_Grupo6.repository.ImagenProductoRepository;
@@ -58,8 +61,9 @@ public class ProductoService {
 
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "No existe el usuario con ID " + request.getUsuarioId()));
+                        new UsuarioNoEncontradoException(request.getUsuarioId()));
+
+        validarQueSeaVendedor(usuario);
 
         Producto producto = new Producto();
 
@@ -82,12 +86,13 @@ public class ProductoService {
 
         Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "No existe el usuario con ID " + request.getUsuarioId()));
+                        new UsuarioNoEncontradoException(request.getUsuarioId()));
+
+        validarQueSeaVendedor(usuario);
 
         if (!producto.getUsuario().getId().equals(usuario.getId())) {
-            throw new IllegalArgumentException(
-                    "El usuario no puede modificar un producto que no le pertenece");
+            throw new AccesoNoAutorizadoException(
+                    "Solo el vendedor que publico el producto puede modificarlo");
         }
 
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
@@ -114,12 +119,13 @@ public class ProductoService {
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "No existe el usuario con ID " + usuarioId));
+                        new UsuarioNoEncontradoException(usuarioId));
+
+        validarQueSeaVendedor(usuario);
 
         if (!producto.getUsuario().getId().equals(usuario.getId())) {
-            throw new IllegalArgumentException(
-                    "El usuario no puede eliminar un producto que no le pertenece");
+            throw new AccesoNoAutorizadoException(
+                    "Solo el vendedor que publico el producto puede eliminarlo");
         }
 
         productoRepository.delete(producto);
@@ -156,6 +162,17 @@ public class ProductoService {
                 imagenProductoRepository.findByProductoIdOrderByOrdenAsc(id);
 
         return convertirADetalle(producto, imagenes);
+    }
+
+    /**
+     * Un e-commerce tiene un vendedor fijo, no es un marketplace: solo el rol
+     * VENDEDOR puede publicar y administrar productos. El CLIENTE compra.
+     */
+    private void validarQueSeaVendedor(Usuario usuario) {
+        if (usuario.getRol() != RolUsuario.VENDEDOR) {
+            throw new AccesoNoAutorizadoException(
+                    "Solo un usuario con rol VENDEDOR puede administrar productos");
+        }
     }
 
     private Producto buscarEntidadPorId(Long id) {
