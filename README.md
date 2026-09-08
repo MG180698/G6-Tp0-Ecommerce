@@ -118,18 +118,6 @@ al grupo antes de tocarlas, porque las comparten varios modulos.
 
 ![Diagrama entidad-relacion del e-commerce](docs/der.png)
 
-Hecho en Lucidchart, importando el DDL que genera Hibernate a partir de las
-clases `@Entity`. Sale del esquema real y no de un dibujo hecho a mano, asi que
-las tablas, los tipos y las claves foraneas son exactamente los que crea la
-aplicacion.
-
-Para regenerarlo cuando cambia el modelo: exportar el DDL, reimportarlo en
-Lucidchart y exportar el PNG de nuevo.
-
-> **Pendiente:** la imagen es anterior a la separacion de roles, asi que le falta
-> la columna `rol` en `usuarios` (`VARCHAR(20) NOT NULL`). El resto del esquema
-> no cambio. Hay que regenerarla.
-
 Las cuatro relaciones JPA que pide la catedra, y donde esta cada una:
 
 | Relacion | Donde |
@@ -138,21 +126,6 @@ Las cuatro relaciones JPA que pide la catedra, y donde esta cada una:
 | `@OneToMany` | Categoria → productos, Producto → imagenes, Carrito → items |
 | `@OneToOne` | Carrito → Usuario |
 | `@ManyToMany` | Ninguna directa. La de Carrito ↔ Producto esta **resuelta** con `ItemCarrito`, porque la asociacion necesita guardar la cantidad. |
-
-Decisiones que conviene poder defender en la entrega:
-
-- **`precio` es `BigDecimal`, no `double`**: `double` arrastra errores de
-  redondeo binario y con plata eso no se perdona.
-- **`ItemCarrito` es una entidad y no un `@ManyToMany`**: la asociacion entre
-  carrito y producto tiene un atributo propio, la cantidad. Ese es el patron
-  estandar de JPA para ese caso.
-- **`ImagenProducto` es una entidad y no una lista de Strings**: la catedra pide
-  demostrar relaciones JPA explicitas entre entidades reales.
-- **`Usuario` tiene un rol, `CLIENTE` o `VENDEDOR`**: el profesor aclaro que un
-  e-commerce tiene un vendedor fijo (el dueño del sitio, como la pagina de una
-  marca), a diferencia de un marketplace donde cualquiera publica. Por eso solo
-  el rol `VENDEDOR` puede dar de alta, modificar o eliminar productos. Se
-  corresponde con los roles USER y ADMIN del material de la Clase 05.
 
 ## Reparto de modulos
 
