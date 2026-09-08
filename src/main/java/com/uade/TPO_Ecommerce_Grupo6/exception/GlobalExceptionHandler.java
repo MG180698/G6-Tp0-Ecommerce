@@ -1,5 +1,6 @@
 package com.uade.TPO_Ecommerce_Grupo6.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -118,6 +119,80 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CarritoYaExisteException.class)
     public ResponseEntity<ErrorResponse> handleCarritoYaExiste(
             CarritoYaExisteException ex,
+            WebRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""),
+                HttpStatus.BAD_REQUEST.value()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // 401 UNAUTHORIZED
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<ErrorResponse> handleCredencialesInvalidas(
+            CredencialesInvalidasException ex,
+            WebRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""),
+                HttpStatus.UNAUTHORIZED.value()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    // 403 FORBIDDEN
+
+    @ExceptionHandler(AccesoNoAutorizadoException.class)
+    public ResponseEntity<ErrorResponse> handleAccesoNoAutorizado(
+            AccesoNoAutorizadoException ex,
+            WebRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""),
+                HttpStatus.FORBIDDEN.value()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    // 409 CONFLICT
+
+    /**
+     * Se rompio una restriccion de la base: por ejemplo, borrar un producto que
+     * todavia esta dentro del carrito de alguien. Sin este handler, el mensaje
+     * crudo de la base (con el nombre de la constraint) llegaba al cliente.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex,
+            WebRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+                "La operacion no se puede completar porque el recurso esta en uso",
+                request.getDescription(false).replace("uri=", ""),
+                HttpStatus.CONFLICT.value()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    // 400 BAD REQUEST (reglas de negocio que no tienen excepcion propia)
+
+    /**
+     * Cubre los throw new IllegalStateException / IllegalArgumentException que
+     * quedaron en los services (checkout con carrito vacio, validaciones de
+     * categoria). Sin estos dos handlers caian en el catch-all y respondian 500.
+     */
+    @ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
+    public ResponseEntity<ErrorResponse> handleReglaDeNegocio(
+            RuntimeException ex,
             WebRequest request) {
 
         ErrorResponse error = new ErrorResponse(
