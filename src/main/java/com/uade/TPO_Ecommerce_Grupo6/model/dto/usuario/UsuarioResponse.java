@@ -2,6 +2,8 @@ package com.uade.TPO_Ecommerce_Grupo6.model.dto.usuario;
 
 import java.time.LocalDateTime;
 
+import com.uade.TPO_Ecommerce_Grupo6.model.entity.RolUsuario;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,4 +18,5 @@ public class UsuarioResponse {
     private String nombre;
     private String apellido;
     private LocalDateTime fechaRegistro;
+    private RolUsuario rol;
 }
