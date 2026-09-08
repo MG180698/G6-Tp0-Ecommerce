@@ -10,9 +10,17 @@ con Java 17, Spring Boot, Spring Data JPA y Maven.
 
 ---
 
-> **Estado: kickoff.** Este repo tiene el esqueleto y las 6 entidades JPA.
-> Los controllers, services y repositories los agrega cada modulo. Ver
-> [Reparto de modulos](#reparto-de-modulos).
+> **Estado: Módulo 8 (Checkout, Documentación Swagger/OpenAPI e Integración) completado.**
+> Ver [Reparto de modulos](#reparto-de-modulos).
+
+## Documentación interactiva de la API (Swagger / OpenAPI)
+
+Una vez levantada la aplicación, la documentación interactiva con Swagger UI y la especificación OpenAPI están disponibles en:
+
+- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (o [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html))
+- **OpenAPI JSON Spec:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+Desde Swagger UI se pueden explorar todos los endpoints y probar peticiones interactivamente (Catálogo, Productos, Imágenes, Categorías, Carrito y Checkout).
 
 ## Como levantar el proyecto
 
@@ -29,8 +37,7 @@ En Windows, desde PowerShell:
 .\mvnw spring-boot:run
 ```
 
-La API queda en `http://localhost:8080`. Los endpoints los va agregando cada
-modulo; el kickoff solo garantiza que la app arranca y crea las tablas.
+La API queda en `http://localhost:8080`.
 
 ### Verificar que las tablas se crearon (consola de H2)
 
@@ -136,16 +143,16 @@ Decisiones que conviene poder defender en la entrega:
 Cada modulo es una vertical completa: su repository, su service, su controller y
 sus DTOs. Las entidades ya estan y son compartidas.
 
-| # | Modulo | Endpoints | Depende de |
-|---|---|---|---|
-| 1 | Usuarios | `POST /api/usuarios` | kickoff |
-| 2 | Autenticacion + errores globales | `POST /api/auth/login` | 1 |
-| 3 | Categorias (CRUD) | `GET/POST/PUT/DELETE /api/categorias` | kickoff |
-| 4 | Catalogo (listado y detalle) | `GET /api/productos`, `GET /api/productos/{id}` | 1, 3 |
-| 5 | Gestion de productos | `POST/PUT/DELETE /api/productos` | 1, 3, 4 |
-| 6 | Imagenes de producto | `POST /api/productos/{id}/imagenes` | 5 |
-| 7 | Carrito (items) | `GET/POST/DELETE /api/carrito` | 1, 4 |
-| 8 | Checkout + documentacion | `POST /api/carrito/checkout` | 7 |
+| # | Modulo | Endpoints | Depende de | Estado |
+|---|---|---|---|---|
+| 1 | Usuarios | `POST /api/usuarios` | kickoff | Pendiente |
+| 2 | Autenticacion + errores globales | `POST /api/auth/login` | 1 | Pendiente |
+| 3 | Categorias (CRUD) | `GET/POST/PUT/DELETE /api/categorias` | kickoff | Implementado |
+| 4 | Catalogo (listado y detalle) | `GET /api/productos`, `GET /api/productos/{id}` | 1, 3 | Implementado |
+| 5 | Gestion de productos | `POST/PUT/DELETE /api/productos` | 1, 3, 4 | Implementado |
+| 6 | Imagenes de producto | `POST /api/productos/{id}/imagenes` | 5 | Implementado |
+| 7 | Carrito (items) | `GET/POST/DELETE /api/carrito` | 1, 4 | Implementado |
+| 8 | Checkout + documentacion | `POST /api/carrito/checkout` | 7 | **Implementado** |
 
 ## Como trabajamos
 

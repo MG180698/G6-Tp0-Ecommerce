@@ -17,9 +17,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.categoria.CategoriaRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.categoria.CategoriaResponse;
 import com.uade.TPO_Ecommerce_Grupo6.service.CategoriaService;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+@Tag(name = "Categorías", description = "Endpoints para la gestión de categorías de productos")
 @RestController
 @RequestMapping("/api/categorias")
 public class CategoriaController {
@@ -30,11 +32,13 @@ public class CategoriaController {
         this.categoriaService = categoriaService;
     }
 
+    @Operation(summary = "Listar todas las categorías")
     @GetMapping
     public ResponseEntity<List<CategoriaResponse>> listarTodas() {
         return ResponseEntity.ok(categoriaService.listarTodas());
     }
 
+    @Operation(summary = "Obtener categoría por ID")
     @GetMapping("/{id}")
     public ResponseEntity<CategoriaResponse> buscarPorId(
             @PathVariable Long id) {
@@ -42,6 +46,7 @@ public class CategoriaController {
         return ResponseEntity.ok(categoriaService.buscarPorId(id));
     }
 
+    @Operation(summary = "Crear una nueva categoría")
     @PostMapping
     public ResponseEntity<CategoriaResponse> crear(
             @Valid @RequestBody CategoriaRequest request) {
@@ -60,6 +65,7 @@ public class CategoriaController {
                 .body(categoriaCreada);
     }
 
+    @Operation(summary = "Actualizar una categoría existente")
     @PutMapping("/{id}")
     public ResponseEntity<CategoriaResponse> actualizar(
             @PathVariable Long id,
@@ -71,6 +77,7 @@ public class CategoriaController {
         return ResponseEntity.ok(categoriaActualizada);
     }
 
+    @Operation(summary = "Eliminar una categoría por ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         categoriaService.eliminar(id);
