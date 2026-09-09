@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Categoria;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Producto;
+import com.uade.TPO_Ecommerce_Grupo6.model.entity.RolUsuario;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Usuario;
 import com.uade.TPO_Ecommerce_Grupo6.repository.ProductoRepository;
 
@@ -72,6 +73,8 @@ class ProductoRepositoryTest {
         usuario.setPassword("hash");
         usuario.setNombre("Test");
         usuario.setApellido("Vendedor");
+        // El rol es obligatorio desde que se separaron CLIENTE y VENDEDOR.
+        usuario.setRol(RolUsuario.VENDEDOR);
         return entityManager.persistAndFlush(usuario);
     }
 
