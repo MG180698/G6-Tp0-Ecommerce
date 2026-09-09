@@ -5,14 +5,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ImagenProductoResponse {
-
     private Long id;
     private String url;
     private Integer orden;
-    private Long productoId;
+    private Long productoId;  // Opcional para algunos contextos, pero presente para flexibilidad
 }
+
