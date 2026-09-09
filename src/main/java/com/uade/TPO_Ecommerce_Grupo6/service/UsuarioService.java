@@ -10,6 +10,7 @@ import com.uade.TPO_Ecommerce_Grupo6.exception.DatoDuplicadoException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.UsuarioNoEncontradoException;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.usuario.UsuarioRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.usuario.UsuarioResponse;
+import com.uade.TPO_Ecommerce_Grupo6.model.entity.RolUsuario;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Usuario;
 import com.uade.TPO_Ecommerce_Grupo6.repository.UsuarioRepository;
 
@@ -51,6 +52,8 @@ public class UsuarioService {
         usuario.setApellido(request.getApellido());
         // La fecha la pone el servidor, no el cliente.
         usuario.setFechaRegistro(LocalDateTime.now());
+        // Si el registro no pide un rol explicito, se crea como CLIENTE.
+        usuario.setRol(request.getRol() != null ? request.getRol() : RolUsuario.CLIENTE);
 
         return convertirAResponse(usuarioRepository.save(usuario));
     }
@@ -70,6 +73,7 @@ public class UsuarioService {
                 usuario.getEmail(),
                 usuario.getNombre(),
                 usuario.getApellido(),
-                usuario.getFechaRegistro());
+                usuario.getFechaRegistro(),
+                usuario.getRol());
     }
 }
