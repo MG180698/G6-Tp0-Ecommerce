@@ -69,7 +69,9 @@ public class UsuarioService {
     private UsuarioResponse convertirAResponse(Usuario usuario) {
         return new UsuarioResponse(
                 usuario.getId(),
-                usuario.getUsername(),
+                // getNombreUsuario y no getUsername: desde que la entidad
+                // implementa UserDetails, getUsername() devuelve el email.
+                usuario.getNombreUsuario(),
                 usuario.getEmail(),
                 usuario.getNombre(),
                 usuario.getApellido(),
