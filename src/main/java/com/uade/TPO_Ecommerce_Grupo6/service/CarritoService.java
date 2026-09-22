@@ -15,8 +15,10 @@ import com.uade.TPO_Ecommerce_Grupo6.repository.CarritoRepository;
 import com.uade.TPO_Ecommerce_Grupo6.repository.ItemCarritoRepository;
 import com.uade.TPO_Ecommerce_Grupo6.repository.ProductoRepository;
 import com.uade.TPO_Ecommerce_Grupo6.repository.UsuarioRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -42,13 +44,12 @@ public class CarritoService {
     }
 
     @Transactional
-    public CarritoDTO crearCarrito(CrearCarritoRequest request) {
-        if (carritoRepository.existsByUsuario_Id(request.getUsuarioId())) {
-            throw new CarritoYaExisteException(request.getUsuarioId());
+    public CarritoDTO crearCarrito(String username) {
+        Usuario usuario = buscarUsuario(username);
+        Long usuarioId = usuario.getId();
+        if (carritoRepository.existsByUsuario_Id(usuarioId)) {
+            throw new CarritoYaExisteException(usuarioId);
         }
-        Usuario usuario = usuarioRepository
-                .findById(request.getUsuarioId())
-                .orElseThrow(() -> new UsuarioNoEncontradoException(request.getUsuarioId()));
         Carrito carrito = Carrito.builder()
                 .usuario(usuario)
                 .build();
@@ -57,27 +58,20 @@ public class CarritoService {
     }
 
     @Transactional(readOnly = true)
-    public CarritoDTO obtenerCarrito(Long usuarioId) {
-        Carrito carrito = buscarCarrito(usuarioId);
+    public CarritoDTO obtenerCarrito(String username) {
+        Usuario usuario = buscarUsuario(username);
+        Carrito carrito = buscarCarrito(usuario.getId());
         return convertirDTO(carrito);
     }
 
     @Transactional
-    public CarritoDTO agregarItem(AgregarItemCarritoRequest request) {
-        // Si el carrito no existe, crearlo automaticamente
-        Carrito carrito = carritoRepository.findByUsuario_Id(request.getUsuarioId())
-                .orElseGet(() -> {
-                    Usuario usuario = usuarioRepository
-                            .findById(request.getUsuarioId())
-                            .orElseThrow(() -> new UsuarioNoEncontradoException(request.getUsuarioId()));
-                    Carrito nuevoCarrito = Carrito.builder().usuario(usuario).build();
-                    return carritoRepository.save(nuevoCarrito);
-                });
-
+    public CarritoDTO agregarItem(String username, AgregarItemCarritoRequest request) {
+        Usuario usuario = buscarUsuario(username);
+        Long usuarioId = usuario.getId();
+        Carrito carrito = buscarCarrito(usuarioId);
         Producto producto = productoRepository
                 .findById(request.getProductoId())
                 .orElseThrow(() -> new ProductoNoEncontradoException(request.getProductoId()));
-
         ItemCarrito itemExistente = itemCarritoRepository.findByCarrito_IdAndProducto_Id(carrito.getId(), producto.getId())
                 .orElse(null);
 
@@ -96,23 +90,27 @@ public class CarritoService {
             carrito.agregarItem(nuevoItem);
             carritoRepository.save(carrito);
         }
-        return convertirDTO(buscarCarrito(request.getUsuarioId()));
+        return convertirDTO(buscarCarrito(usuarioId));
     }
 
     @Transactional
-    public CarritoDTO actualizarCantidad(Long productoId, ActualizarItemCarritoRequest request) {
-        Carrito carrito = buscarCarrito(request.getUsuarioId());
+    public CarritoDTO actualizarCantidad(String username, Long productoId, ActualizarItemCarritoRequest request) {
+        Usuario usuario = buscarUsuario(username);
+        Long usuarioId = usuario.getId();
+        Carrito carrito = buscarCarrito(usuarioId);
         ItemCarrito item = itemCarritoRepository.findByCarrito_IdAndProducto_Id(carrito.getId(), productoId)
                 .orElseThrow(() -> new ItemCarritoNoEncontradoException(productoId));
         validarStock(item.getProducto(), request.getCantidad());
         item.setCantidad(request.getCantidad());
         itemCarritoRepository.save(item);
-        return convertirDTO(buscarCarrito(request.getUsuarioId())
+        return convertirDTO(buscarCarrito(usuarioId)
         );
     }
 
     @Transactional
-    public CarritoDTO eliminarItem(Long usuarioId, Long productoId) {
+    public CarritoDTO eliminarItem(String username, Long productoId) {
+        Usuario usuario = buscarUsuario(username);
+        Long usuarioId = usuario.getId();
         Carrito carrito = buscarCarrito(usuarioId);
         ItemCarrito item = itemCarritoRepository.findByCarrito_IdAndProducto_Id(carrito.getId(), productoId)
                 .orElseThrow(() -> new ItemCarritoNoEncontradoException(productoId));
@@ -122,15 +120,17 @@ public class CarritoService {
     }
 
     @Transactional
-    public void vaciarCarrito(Long usuarioId) {
-        Carrito carrito = buscarCarrito(usuarioId);
+    public void vaciarCarrito(String username) {
+        Usuario usuario = buscarUsuario(username);
+        Carrito carrito = buscarCarrito(usuario.getId());
         carrito.vaciar();
         carritoRepository.save(carrito);
     }
 
     @Transactional
-    public CheckoutResponse checkout(Long usuarioId) {
-        Carrito carrito = buscarCarrito(usuarioId);
+    public CheckoutResponse checkout(String username) {
+        Usuario usuario = buscarUsuario(username);
+        Carrito carrito = buscarCarrito(usuario.getId());
 
         if (carrito.getItems() == null || carrito.getItems().isEmpty()) {
             throw new IllegalStateException("No se puede realizar el checkout porque el carrito está vacío");
@@ -161,7 +161,7 @@ public class CarritoService {
         carritoRepository.save(carrito);
 
         return CheckoutResponse.builder()
-                .usuarioId(usuarioId)
+                .usuarioId(usuario.getId())
                 .cantidadItemsComprados(totalItemsComprados)
                 .montoTotal(montoTotal)
                 .fechaCheckout(LocalDateTime.now())
@@ -212,5 +212,11 @@ public class CarritoService {
                 .cantidadProductos(cantidadProductos)
                 .total(total)
                 .build();
+    }
+
+
+    private Usuario buscarUsuario(String username) {
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario autenticado no encontrado"));
     }
 }
