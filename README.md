@@ -12,7 +12,7 @@ Construido con Java 17, Spring Boot, Spring Data JPA y Maven.
 
 ## Detalle tecnico y funcional
 
-> **Estado: los 9 modulos estan implementados y mergeados en `main`.**
+> **Estado: los 8 módulos funcionales están implementados en `main`.**
 > El flujo completo del enunciado corre de punta a punta: registro, login,
 > catalogo, publicacion de productos con fotos, carrito y checkout.
 > Ver [Reparto de modulos](#reparto-de-modulos).
@@ -176,20 +176,26 @@ POST /api/usuarios
   "nombre": "Mi", "apellido": "Tienda", "rol": "VENDEDOR" }
 ```
 
-### Que falta para cerrar la seguridad
+### Autenticación con JWT
 
-Las dependencias de `jjwt` estan en el `pom.xml`, pero **el login todavia no
-emite un token JWT**: devuelve los datos del usuario. Mientras eso no exista, el
-`usuarioId` viaja en el cuerpo de cada request, asi que las validaciones de rol
-y de dueño se apoyan en un dato que manda el cliente. Es la mejora numero uno
-para una proxima entrega: cuando el usuario salga del token, el campo
-`usuarioId` desaparece de `ProductoRequest` y de los parametros del carrito.
+El login (`POST /api/auth/login`) devuelve un token JWT. Para acceder a los
+endpoints protegidos, el cliente debe enviarlo en cada petición:
 
-`config/SecurityConfig.java` abre todos los endpoints (`permitAll`) por el mismo
-motivo: sin token que validar, cerrarlos dejaria la API inutilizable.
+```http
+Authorization: Bearer <token>
+```
 
-> Ojo con la version de `jjwt`: la Clase 05 fija la **0.11.5**, y la API cambio
-> bastante en la 0.12.x. Un tutorial de 0.12 no compila contra esta.
+`JwtAuthenticationFilter` valida el token, carga al usuario y sus roles en el
+contexto de Spring Security. Los endpoints de autenticación, consulta de
+productos, H2 y Swagger son públicos. La administración de productos requiere
+el rol `VENDEDOR`; el resto de los endpoints protegidos requiere autenticación.
+
+En Swagger UI se puede presionar **Authorize** e ingresar el JWT obtenido en el
+login para probar los endpoints protegidos.
+
+> La versión de `jjwt` utilizada es la **0.11.5**, de acuerdo con el material de
+> la materia.
+
 
 ## Como trabajamos
 
