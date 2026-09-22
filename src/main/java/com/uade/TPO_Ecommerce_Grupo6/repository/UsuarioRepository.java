@@ -19,4 +19,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Lo necesita el Modulo 2 para el login: busca al usuario por su email
     // y despues compara la password con BCrypt.
     Optional<Usuario> findByEmail(String email);
+
+    Optional<Usuario> findByUsername(String username);
 }
