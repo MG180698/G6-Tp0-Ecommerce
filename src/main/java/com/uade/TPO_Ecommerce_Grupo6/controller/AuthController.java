@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.auth.LoginRequest;
-import com.uade.TPO_Ecommerce_Grupo6.model.dto.usuario.UsuarioResponse;
+import com.uade.TPO_Ecommerce_Grupo6.model.dto.auth.LoginResponse;
 import com.uade.TPO_Ecommerce_Grupo6.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,10 +25,11 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @Operation(summary = "Autenticar usuario con email y contraseña")
+    @Operation(
+            summary = "Autenticar usuario con email y contraseña",
+            description = "Devuelve un JWT para usar como Authorization: Bearer <token>")
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest request) {
-        UsuarioResponse usuario = authService.login(request);
-        return ResponseEntity.ok(usuario);
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }
