@@ -7,9 +7,6 @@ import lombok.Data;
 @Data
 public class ActualizarItemCarritoRequest {
 
-    @NotNull(message = "El usuario es obligatorio")
-    private Long usuarioId;
-
     @NotNull(message = "La cantidad es obligatoria")
     @Min(value = 1, message = "La cantidad debe ser mayor a 0")
     private Integer cantidad;

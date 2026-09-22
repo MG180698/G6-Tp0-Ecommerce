@@ -7,9 +7,6 @@ import lombok.Data;
 @Data
 public class AgregarItemCarritoRequest {
 
-    @NotNull(message = "El usuario es obligatorio")
-    private Long usuarioId;
-
     @NotNull(message = "El producto es obligatorio")
     private Long productoId;
 
