@@ -23,6 +23,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.uade.TPO_Ecommerce_Grupo6.model.entity.Usuario;
+
 /**
  * Módulo 4 — Catálogo (solo lectura). El Módulo 5 agrega acá mismo los
  * métodos POST/PUT/DELETE de gestión de productos.
@@ -56,35 +59,40 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.buscarPorId(id));
     }
 
-    @Operation(summary = "Crear una nueva publicación de producto")
-    @PostMapping
-    public ResponseEntity<ProductoDetalleResponse> crear(
-            @Valid @RequestBody ProductoRequest request) {
 
-        ProductoDetalleResponse productoCreado = productoService.crear(request);
+@Operation(summary = "Crear una nueva publicación de producto")
+@PostMapping
+public ResponseEntity<ProductoDetalleResponse> crear(
+        @Valid @RequestBody ProductoRequest request,
+        @AuthenticationPrincipal Usuario usuarioAutenticado) {
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(productoCreado);
-    }
+    ProductoDetalleResponse productoCreado =
+            productoService.crear(request, usuarioAutenticado);
 
-    @Operation(summary = "Actualizar una publicación de producto existente")
-    @PutMapping("/{id}")
-    public ResponseEntity<ProductoDetalleResponse> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody ProductoRequest request) {
-
-        return ResponseEntity.ok(productoService.actualizar(id, request));
-    }
-
-    @Operation(summary = "Eliminar una publicación de producto")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long id,
-            @RequestParam Long usuarioId) {
-
-        productoService.eliminar(id, usuarioId);
-
-        return ResponseEntity.noContent().build();
-    }
+    return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(productoCreado);
 }
+
+@Operation(summary = "Actualizar una publicación de producto existente")
+@PutMapping("/{id}")
+public ResponseEntity<ProductoDetalleResponse> actualizar(
+        @PathVariable Long id,
+        @Valid @RequestBody ProductoRequest request,
+        @AuthenticationPrincipal Usuario usuarioAutenticado) {
+
+    return ResponseEntity.ok(
+            productoService.actualizar(id, request, usuarioAutenticado));
+}
+
+@Operation(summary = "Eliminar una publicación de producto")
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> eliminar(
+        @PathVariable Long id,
+        @AuthenticationPrincipal Usuario usuarioAutenticado) {
+
+    productoService.eliminar(id, usuarioAutenticado);
+
+    return ResponseEntity.noContent().build(); 
+}}
+    
