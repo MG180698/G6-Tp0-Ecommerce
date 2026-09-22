@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.uade.TPO_Ecommerce_Grupo6.exception.AccesoNoAutorizadoException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.CategoriaNoEncontradaException;
 import com.uade.TPO_Ecommerce_Grupo6.exception.ProductoNoEncontradoException;
-import com.uade.TPO_Ecommerce_Grupo6.exception.UsuarioNoEncontradoException;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.imagen.ImagenProductoResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoDetalleResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoRequest;
@@ -23,7 +22,6 @@ import com.uade.TPO_Ecommerce_Grupo6.model.entity.Usuario;
 import com.uade.TPO_Ecommerce_Grupo6.repository.CategoriaRepository;
 import com.uade.TPO_Ecommerce_Grupo6.repository.ImagenProductoRepository;
 import com.uade.TPO_Ecommerce_Grupo6.repository.ProductoRepository;
-import com.uade.TPO_Ecommerce_Grupo6.repository.UsuarioRepository;
 
 /**
  * Módulo 4 — Catálogo (solo lectura): home con listado alfabético + filtro por
@@ -39,34 +37,28 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
     private final ImagenProductoRepository imagenProductoRepository;
     private final CategoriaRepository categoriaRepository;
-    private final UsuarioRepository usuarioRepository;
 
     public ProductoService(
             ProductoRepository productoRepository,
             ImagenProductoRepository imagenProductoRepository,
-            CategoriaRepository categoriaRepository,
-            UsuarioRepository usuarioRepository) {
+            CategoriaRepository categoriaRepository) {
 
         this.productoRepository = productoRepository;
         this.imagenProductoRepository = imagenProductoRepository;
         this.categoriaRepository = categoriaRepository;
-        this.usuarioRepository = usuarioRepository;
     }
 
-    public ProductoDetalleResponse crear(ProductoRequest request) {
+    public ProductoDetalleResponse crear(
+            ProductoRequest request,
+            Usuario usuario) {
 
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() ->
                         new CategoriaNoEncontradaException(request.getCategoriaId()));
 
-        Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
-                .orElseThrow(() ->
-                        new UsuarioNoEncontradoException(request.getUsuarioId()));
-
         validarQueSeaVendedor(usuario);
 
         Producto producto = new Producto();
-
         producto.setNombre(request.getNombre());
         producto.setDescripcion(request.getDescripcion());
         producto.setPrecio(request.getPrecio());
@@ -80,13 +72,12 @@ public class ProductoService {
         return convertirADetalle(productoGuardado, List.of());
     }
 
-    public ProductoDetalleResponse actualizar(Long id, ProductoRequest request) {
+    public ProductoDetalleResponse actualizar(
+            Long id,
+            ProductoRequest request,
+            Usuario usuario) {
 
         Producto producto = buscarEntidadPorId(id);
-
-        Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
-                .orElseThrow(() ->
-                        new UsuarioNoEncontradoException(request.getUsuarioId()));
 
         validarQueSeaVendedor(usuario);
 
@@ -113,13 +104,9 @@ public class ProductoService {
         return convertirADetalle(productoActualizado, imagenes);
     }
 
-    public void eliminar(Long id, Long usuarioId) {
+    public void eliminar(Long id, Usuario usuario) {
 
         Producto producto = buscarEntidadPorId(id);
-
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() ->
-                        new UsuarioNoEncontradoException(usuarioId));
 
         validarQueSeaVendedor(usuario);
 
@@ -136,6 +123,7 @@ public class ProductoService {
      * Reutilizado por el Módulo 8 (Checkout) dentro de la misma transacción.
      */
     public void descontarStock(Long productoId, Integer cantidad) {
+
         Producto producto = buscarEntidadPorId(productoId);
         producto.setStock(producto.getStock() - cantidad);
         productoRepository.save(producto);
@@ -165,10 +153,10 @@ public class ProductoService {
     }
 
     /**
-     * Un e-commerce tiene un vendedor fijo, no es un marketplace: solo el rol
-     * VENDEDOR puede publicar y administrar productos. El CLIENTE compra.
+     * Solo un usuario con rol VENDEDOR puede administrar productos.
      */
     private void validarQueSeaVendedor(Usuario usuario) {
+
         if (usuario.getRol() != RolUsuario.VENDEDOR) {
             throw new AccesoNoAutorizadoException(
                     "Solo un usuario con rol VENDEDOR puede administrar productos");
@@ -213,7 +201,9 @@ public class ProductoService {
                 .toList();
 
         String vendedorNombre =
-                producto.getUsuario().getNombre() + " " + producto.getUsuario().getApellido();
+                producto.getUsuario().getNombre()
+                + " "
+                + producto.getUsuario().getApellido();
 
         return new ProductoDetalleResponse(
                 producto.getId(),

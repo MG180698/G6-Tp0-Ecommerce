@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoDetalleResponse;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoRequest;
 import com.uade.TPO_Ecommerce_Grupo6.model.dto.producto.ProductoResumenResponse;
+import com.uade.TPO_Ecommerce_Grupo6.model.entity.Usuario;
 import com.uade.TPO_Ecommerce_Grupo6.service.ProductoService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +29,10 @@ import jakarta.validation.Valid;
  * Módulo 4 — Catálogo (solo lectura). El Módulo 5 agrega acá mismo los
  * métodos POST/PUT/DELETE de gestión de productos.
  */
-@Tag(name = "Productos", description = "Endpoints de catálogo y gestión de productos")
+@Tag(
+        name = "Productos",
+        description = "Endpoints de catálogo y gestión de productos"
+)
 @RestController
 @RequestMapping("/api/productos")
 public class ProductoController {
@@ -38,30 +43,36 @@ public class ProductoController {
         this.productoService = productoService;
     }
 
-    // Home: GET /api/productos (alfabético) o GET /api/productos?categoriaId=3
-    @Operation(summary = "Listar productos con orden alfabético y filtro opcional por categoría")
+    // Home: GET /api/productos o GET /api/productos?categoriaId=3
+    @Operation(
+            summary = "Listar productos con orden alfabético y filtro opcional por categoría"
+    )
     @GetMapping
     public ResponseEntity<List<ProductoResumenResponse>> listar(
             @RequestParam(required = false) Long categoriaId) {
 
-        return ResponseEntity.ok(productoService.listarTodos(categoriaId));
+        return ResponseEntity.ok(
+                productoService.listarTodos(categoriaId));
     }
 
-    // Detalle: imagen ampliada + descripción completa.
+    // Detalle: imagen ampliada y descripción completa.
     @Operation(summary = "Obtener el detalle de un producto por ID")
     @GetMapping("/{id}")
     public ResponseEntity<ProductoDetalleResponse> buscarPorId(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(productoService.buscarPorId(id));
+        return ResponseEntity.ok(
+                productoService.buscarPorId(id));
     }
 
     @Operation(summary = "Crear una nueva publicación de producto")
     @PostMapping
     public ResponseEntity<ProductoDetalleResponse> crear(
-            @Valid @RequestBody ProductoRequest request) {
+            @Valid @RequestBody ProductoRequest request,
+            @AuthenticationPrincipal Usuario usuarioAutenticado) {
 
-        ProductoDetalleResponse productoCreado = productoService.crear(request);
+        ProductoDetalleResponse productoCreado =
+                productoService.crear(request, usuarioAutenticado);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -72,18 +83,23 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductoDetalleResponse> actualizar(
             @PathVariable Long id,
-            @Valid @RequestBody ProductoRequest request) {
+            @Valid @RequestBody ProductoRequest request,
+            @AuthenticationPrincipal Usuario usuarioAutenticado) {
 
-        return ResponseEntity.ok(productoService.actualizar(id, request));
+        return ResponseEntity.ok(
+                productoService.actualizar(
+                        id,
+                        request,
+                        usuarioAutenticado));
     }
 
     @Operation(summary = "Eliminar una publicación de producto")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
             @PathVariable Long id,
-            @RequestParam Long usuarioId) {
+            @AuthenticationPrincipal Usuario usuarioAutenticado) {
 
-        productoService.eliminar(id, usuarioId);
+        productoService.eliminar(id, usuarioAutenticado);
 
         return ResponseEntity.noContent().build();
     }
