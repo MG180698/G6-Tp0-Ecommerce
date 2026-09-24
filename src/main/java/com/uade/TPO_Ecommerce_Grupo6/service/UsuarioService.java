@@ -43,17 +43,18 @@ public class UsuarioService {
             throw new DatoDuplicadoException("nombre de usuario", request.getUsername());
         }
 
-        Usuario usuario = new Usuario();
-        usuario.setUsername(request.getUsername());
-        usuario.setEmail(request.getEmail());
-        // Nunca se guarda la password en texto plano.
-        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
-        usuario.setNombre(request.getNombre());
-        usuario.setApellido(request.getApellido());
-        // La fecha la pone el servidor, no el cliente.
-        usuario.setFechaRegistro(LocalDateTime.now());
-        // Si el registro no pide un rol explicito, se crea como CLIENTE.
-        usuario.setRol(request.getRol() != null ? request.getRol() : RolUsuario.CLIENTE);
+        Usuario usuario = Usuario.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                // Nunca se guarda la password en texto plano.
+                .password(passwordEncoder.encode(request.getPassword()))
+                .nombre(request.getNombre())
+                .apellido(request.getApellido())
+                // La fecha la pone el servidor, no el cliente.
+                .fechaRegistro(LocalDateTime.now())
+                // Si el registro no pide un rol explicito, se crea como CLIENTE.
+                .rol(request.getRol() != null ? request.getRol() : RolUsuario.CLIENTE)
+                .build();
 
         return convertirAResponse(usuarioRepository.save(usuario));
     }
