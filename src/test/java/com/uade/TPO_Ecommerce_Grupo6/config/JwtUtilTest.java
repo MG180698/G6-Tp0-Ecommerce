@@ -1,4 +1,4 @@
-package com.uade.TPO_Ecommerce_Grupo6;
+package com.uade.TPO_Ecommerce_Grupo6.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,7 +9,6 @@ import java.util.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.uade.TPO_Ecommerce_Grupo6.config.JwtUtil;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.RolUsuario;
 import com.uade.TPO_Ecommerce_Grupo6.model.entity.Usuario;
 
